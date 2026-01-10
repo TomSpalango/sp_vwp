@@ -8,6 +8,7 @@ import {
   updateEvent,
   deleteEvent
 } from '../controllers/eventController.js';
+import { signupForEvent, getEventSignups } from '../controllers/signupController.js';
 
 const router = Router();
 
@@ -21,5 +22,11 @@ router.post('/', authRequired, requireRole('Registered User', 'Event Coordinator
 // Just require login for now
 router.put('/:id', authRequired, updateEvent);
 router.delete('/:id', authRequired, deleteEvent);
+
+// Sign up for an event - must be logged in and at least Registered User
+router.post('/:id/signup', authRequired, requireRole('Registered User', 'Event Coordinator', 'Admin'), signupForEvent);
+
+// View signups (coordinator and admin only)
+router.get('/:id/signups', authRequired, requireRole('Event Coordinator', 'Admin'), getEventSignups);
 
 export default router;
