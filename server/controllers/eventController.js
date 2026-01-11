@@ -86,6 +86,9 @@ export async function updateEvent(req, res) {
 
     const { title, description, location, start_datetime, end_datetime, capacity, status } = req.body;
 
+    // Only admin can change status
+    const newStatus = (req.user.role === 'Admin' && status) ? status : event.status;
+
     await pool.query(
       `UPDATE events
        SET title=?, description=?, location=?, start_datetime=?, end_datetime=?, capacity=?, status=?, updated_at=NOW()
@@ -97,7 +100,7 @@ export async function updateEvent(req, res) {
         start_datetime || event.start_datetime,
         end_datetime || event.end_datetime,
         capacity || event.capacity,
-        status || event.status,
+        newStatus,
         id
       ]
     );
@@ -108,6 +111,52 @@ export async function updateEvent(req, res) {
     res.status(500).json({ error: 'Server error' });
   }
 }
+
+
+// Approve an event
+export async function approveEvent(req, res) {
+  const eventId = Number(req.params.id);
+  if (!Number.isInteger(eventId)) return res.status(400).json({ error: 'Invalid event id' });
+
+  try {
+    const [events] = await pool.query(`SELECT * FROM events WHERE id = ?`, [eventId]);
+    if (events.length === 0) return res.status(404).json({ error: 'Event not found' });
+
+    await pool.query(
+      `UPDATE events SET status='approved', updated_at=NOW() WHERE id=?`,
+      [eventId]
+    );
+
+    res.json({ message: 'Event approved' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+}
+
+
+// Decline an event
+export async function declineEvent(req, res) {
+  const eventId = Number(req.params.id);
+  if (!Number.isInteger(eventId)) return res.status(400).json({ error: 'Invalid event id' });
+
+  try {
+    const [events] = await pool.query(`SELECT * FROM events WHERE id = ?`, [eventId]);
+    if (events.length === 0) return res.status(404).json({ error: 'Event not found' });
+
+    await pool.query(
+      `UPDATE events SET status='declined', updated_at=NOW() WHERE id=?`,
+      [eventId]
+    );
+
+    res.json({ message: 'Event declined' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+}
+
+
 
 // Delete an event
 export async function deleteEvent(req, res) {

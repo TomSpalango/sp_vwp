@@ -7,6 +7,8 @@ import {
   getEvent,
   getAllEvents,
   updateEvent,
+  approveEvent,
+  declineEvent,
   deleteEvent
 } from '../controllers/eventController.js';
 import { signupForEvent, getEventSignups } from '../controllers/signupController.js';
@@ -20,9 +22,11 @@ router.get('/:id', getEvent);        // Guests can view (approved only)
 // Registered users can create events (pending approval)
 router.post('/', authRequired, requireRole('Registered User', 'Event Coordinator', 'Admin'), createEvent);
 
-// Only creator or Admin can update/delete
+// Only creator or Admin can update/delete / approve/decline
 // Just require login for now
 router.put('/:id', authRequired, updateEvent);
+router.put('/:id/approve', authRequired, requireRole('Admin'), approveEvent);
+router.put('/:id/decline', authRequired, requireRole('Admin'), declineEvent);
 router.delete('/:id', authRequired, deleteEvent);
 
 // Sign up for an event - must be logged in and at least Registered User
