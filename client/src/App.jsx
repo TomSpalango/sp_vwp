@@ -6,6 +6,8 @@ import EventDetails from './pages/EventDetails';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import CreateEvent from './pages/CreateEvent';
+import Attendees from './pages/Attendees';
+import EditEvent from './pages/EditEvent';
 
 const router = createBrowserRouter([
   {
@@ -17,7 +19,9 @@ const router = createBrowserRouter([
       { path: 'events/:id', element: <EventDetails /> },
       { path: 'events/new', element: <CreateEvent /> },
       { path: 'login', element: <Login /> },
-      { path: 'register', element: <Register /> }
+      { path: 'register', element: <Register /> },
+    { path: 'events/:id/attendees', element: <Attendees /> },
+    { path: 'events/:id/edit', element: <EditEvent /> }
     ]
   }
 ]);
