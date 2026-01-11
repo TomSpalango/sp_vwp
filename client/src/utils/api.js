@@ -28,6 +28,10 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
 }
 
 export const api = {
+  // Authentication
+  register: (payload) => request('/api/auth/register', { method: 'POST', body: payload }),
+  login: (payload) => request('/api/auth/login', { method: 'POST', body: payload }),
+  
   // Events
   getApprovedEvents: () => request('/api/events'),
   getAllEventsAdmin: () => request('/api/events/all', { auth: true }),
