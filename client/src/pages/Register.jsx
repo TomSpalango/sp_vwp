@@ -71,7 +71,7 @@ export default function Register() {
                 required
               />
               <div className="form-text">
-                Use your project’s password rules (same as Postman testing).
+                Password rules - future impl.
               </div>
             </div>
 
