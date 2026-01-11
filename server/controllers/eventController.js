@@ -20,14 +20,11 @@ export async function createEvent(req, res) {
   }
 }
 
-// Get all events
+// Get all approved events
 export async function getEvents(req, res) {
   try {
     const [rows] = await pool.query(
-      `SELECT e.*, u.name as creator_name
-       FROM events e
-       JOIN users u ON u.id = e.created_by
-       ORDER BY e.start_datetime ASC`
+      `SELECT * FROM events WHERE status = 'approved' ORDER BY start_datetime DESC`
     );
     res.json(rows);
   } catch (err) {
@@ -36,23 +33,44 @@ export async function getEvents(req, res) {
   }
 }
 
-// Get a single event
-export async function getEvent(req, res) {
+// Get all events
+export async function getAllEvents(req, res) {
   try {
     const [rows] = await pool.query(
-      `SELECT e.*, u.name as creator_name
-       FROM events e
-       JOIN users u ON u.id = e.created_by
-       WHERE e.id = ?`,
-      [req.params.id]
+      `SELECT * FROM events ORDER BY start_datetime DESC`
     );
-    if (rows.length === 0) return res.status(404).json({ error: 'Event not found' });
-    res.json(rows[0]);
+    res.json(rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 }
+
+// Get a single event, approved only
+export async function getEvent(req, res) {
+  const eventId = Number(req.params.id);
+
+  if (!Number.isInteger(eventId)) {
+    return res.status(400).json({ error: 'Invalid event id' });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT * FROM events WHERE id = ? AND status = 'approved'`,
+      [eventId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    return res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+}
+
 
 // Update an event
 export async function updateEvent(req, res) {

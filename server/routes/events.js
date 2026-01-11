@@ -5,6 +5,7 @@ import {
   createEvent,
   getEvents,
   getEvent,
+  getAllEvents,
   updateEvent,
   deleteEvent
 } from '../controllers/eventController.js';
@@ -12,8 +13,9 @@ import { signupForEvent, getEventSignups } from '../controllers/signupController
 
 const router = Router();
 
-router.get('/', getEvents);          // Guests can browse
-router.get('/:id', getEvent);        // Guests can view
+router.get('/', getEvents);          // Guests can browse (approved only)
+router.get('/all', authRequired, requireRole('Admin'), getAllEvents); // Admin only can see all
+router.get('/:id', getEvent);        // Guests can view (approved only)
 
 // Registered users can create events (pending approval)
 router.post('/', authRequired, requireRole('Registered User', 'Event Coordinator', 'Admin'), createEvent);
