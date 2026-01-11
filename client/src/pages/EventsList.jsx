@@ -111,7 +111,7 @@ export default function EventsList() {
 
   return (
     <>
-      <div className="d-flex align-items-center justify-content-between mb-3">
+      <div className="d-flex justify-content-between mb-3">
         <h2 className="m-0">Events</h2>
         <button className="btn btn-outline-secondary btn-sm" onClick={loadEvents} disabled={loading}>
           Refresh

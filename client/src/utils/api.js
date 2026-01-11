@@ -40,6 +40,8 @@ export const api = {
   // Actions
   signupForEvent: (id) => request(`/api/events/${id}/signup`, { method: 'POST', auth: true }),
   createEvent: (payload) => request('/api/events', { method: 'POST', body: payload, auth: true }),
+  updateEvent: (id, payload) => request(`/api/events/${id}`, { method: 'PUT', body: payload, auth: true }),
+
   approveEvent: (id) => request(`/api/events/${id}/approve`, { method: 'PUT', auth: true }),
   declineEvent: (id) => request(`/api/events/${id}/decline`, { method: 'PUT', auth: true }),
 
