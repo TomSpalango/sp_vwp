@@ -233,6 +233,11 @@ export default function EventDetails() {
               <dt className="col-sm-3">End</dt>
               <dd className="col-sm-9">{formatDateTime(event.end_datetime)}</dd>
 
+              <dt className="col-sm-3">Attendees</dt>
+              <dd className="col-sm-9">
+                {Number.isFinite(Number(event.signup_count)) ? `${event.signup_count} / ${event.capacity ?? 'N/A'}` : <span className="text-muted">N/A</span>}
+              </dd>
+
               <dt className="col-sm-3">Capacity</dt>
               <dd className="col-sm-9">{event.capacity ?? <span className="text-muted">N/A</span>}</dd>
 

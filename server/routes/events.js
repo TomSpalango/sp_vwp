@@ -35,6 +35,6 @@ router.post('/:id/signup', authRequired, requireRole('Registered User', 'Event C
 // View signups (coordinator and admin only)
 router.get('/:id/signups', authRequired, requireRole('Event Coordinator', 'Admin'), getEventSignups);
 
-router.delete('/:id/signup', authRequired, requireRole('Registered User', 'Event Coordinator', 'Admin'), withdrawFromEvent);
+router.delete('/:id/withdraw', authRequired, requireRole('Registered User', 'Event Coordinator', 'Admin'), withdrawFromEvent);
 
 export default router;

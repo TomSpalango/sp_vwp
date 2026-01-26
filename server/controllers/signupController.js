@@ -11,7 +11,10 @@ export async function signupForEvent(req, res) {
 
   try {
     // Does event exist?
-    const [events] = await pool.query(`SELECT id, status, capacity FROM events WHERE id = ?`, [eventId]);
+    const [events] = await pool.query(
+      `SELECT id, status, capacity FROM events WHERE id = ?`,
+      [eventId]
+    );
     if (events.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
@@ -36,7 +39,7 @@ export async function signupForEvent(req, res) {
       }
     }
 
-    // OK - Insert signup
+    // OK - Insert the signup
     await pool.query(
       `INSERT INTO event_signups (event_id, user_id) VALUES (?, ?)`,
       [eventId, userId]
@@ -54,38 +57,7 @@ export async function signupForEvent(req, res) {
   }
 }
 
-// GET /api/events/:id/signups
-export async function getEventSignups(req, res) {
-  const eventId = Number(req.params.id);
-
-  if (!Number.isInteger(eventId)) {
-    return res.status(400).json({ error: 'Invalid event id' });
-  }
-
-  try {
-    // Verify event exists
-    const [events] = await pool.query(`SELECT id FROM events WHERE id = ?`, [eventId]);
-    if (events.length === 0) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    const [rows] = await pool.query(
-      `SELECT es.id, es.event_id, es.user_id, es.signup_at, u.name, u.email
-       FROM event_signups es
-       JOIN users u ON u.id = es.user_id
-       WHERE es.event_id = ?
-       ORDER BY es.signup_at ASC`,
-      [eventId]
-    );
-
-    return res.json(rows);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-}
-
-// DELETE /api/events/:id/signup
+// DELETE /api/events/:id/withdraw
 export async function withdrawFromEvent(req, res) {
   const eventId = Number(req.params.id);
   const userId = req.user.id;
@@ -95,21 +67,19 @@ export async function withdrawFromEvent(req, res) {
   }
 
   try {
-    // Does event exist?
+    // verify event exists (optional but nice)
     const [events] = await pool.query(`SELECT id FROM events WHERE id = ?`, [eventId]);
     if (events.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Delete the signup row for this user + event
     const [result] = await pool.query(
       `DELETE FROM event_signups WHERE event_id = ? AND user_id = ?`,
       [eventId, userId]
     );
 
-    // If nothing deleted, user wasn't signed up
     if (result.affectedRows === 0) {
-      return res.status(409).json({ error: 'You are not signed up for this event' });
+      return res.status(404).json({ error: 'You are not signed up for this event' });
     }
 
     return res.json({ message: 'Withdrawn successfully' });
@@ -119,3 +89,46 @@ export async function withdrawFromEvent(req, res) {
   }
 }
 
+// GET /api/events/:id/signups
+export async function getEventSignups(req, res) {
+  const eventId = Number(req.params.id);
+
+  if (!Number.isInteger(eventId)) {
+    return res.status(400).json({ error: 'Invalid event id' });
+  }
+
+  try {
+    // Event  tally
+    const [events] = await pool.query(
+      `SELECT 
+         id, title, capacity,
+         (SELECT COUNT(*) FROM event_signups WHERE event_id = ?) AS signup_count
+       FROM events
+       WHERE id = ?`,
+      [eventId, eventId]
+    );
+
+    if (events.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const event = events[0];
+
+    const [rows] = await pool.query(
+      `SELECT 
+         es.id, es.event_id, es.user_id,
+         es.signup_at AS created_at,
+         u.name, u.email
+       FROM event_signups es
+       JOIN users u ON u.id = es.user_id
+       WHERE es.event_id = ?
+       ORDER BY es.signup_at ASC`,
+      [eventId]
+    );
+
+    return res.json({ event, signups: rows });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+}

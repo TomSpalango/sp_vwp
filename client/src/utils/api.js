@@ -31,7 +31,7 @@ export const api = {
   // Authentication
   register: (payload) => request('/api/auth/register', { method: 'POST', body: payload }),
   login: (payload) => request('/api/auth/login', { method: 'POST', body: payload }),
-
+  
   // Events
   getApprovedEvents: () => request('/api/events'),
   getAllEventsAdmin: () => request('/api/events/all', { auth: true }),
@@ -39,8 +39,6 @@ export const api = {
 
   // Actions
   signupForEvent: (id) => request(`/api/events/${id}/signup`, { method: 'POST', auth: true }),
-  withdrawFromEvent: (id) => request(`/api/events/${id}/signup`, { method: 'DELETE', auth: true }),
-
   createEvent: (payload) => request('/api/events', { method: 'POST', body: payload, auth: true }),
   updateEvent: (id, payload) => request(`/api/events/${id}`, { method: 'PUT', body: payload, auth: true }),
 
@@ -49,6 +47,6 @@ export const api = {
 
   deleteEvent: (id) => request(`/api/events/${id}`, { method: 'DELETE', auth: true }),
 
-  // signups list
+  // signups list + tally
   getEventSignups: (id) => request(`/api/events/${id}/signups`, { auth: true })
 };

@@ -8,6 +8,7 @@ export default function Attendees() {
   const user = getUserFromToken();
 
   const [loading, setLoading] = useState(true);
+  const [eventMeta, setEventMeta] = useState(null); // { title, capacity, signup_count }
   const [signups, setSignups] = useState([]);
   const [err, setErr] = useState('');
 
@@ -17,7 +18,9 @@ export default function Attendees() {
       setErr('');
       try {
         const data = await api.getEventSignups(id);
-        setSignups(Array.isArray(data) ? data : []);
+        // expected: { event: {...}, signups: [...] }
+        setEventMeta(data?.event ?? null);
+        setSignups(Array.isArray(data?.signups) ? data.signups : []);
       } catch (e) {
         setErr(e.message);
       } finally {
@@ -38,10 +41,17 @@ export default function Attendees() {
     );
   }
 
+  const signupCount = Number(eventMeta?.signup_count ?? signups.length ?? 0);
+  const capacity = eventMeta?.capacity; // could be null
+
   return (
     <>
       <div className="d-flex align-items-center justify-content-between mb-3">
-        <h2 className="m-0">Attendees</h2>
+        <div>
+          <h2 className="m-0">Attendees</h2>
+          {eventMeta?.title && <div className="text-muted small">{eventMeta.title}</div>}
+        </div>
+
         <div className="d-flex gap-2">
           <Link className="btn btn-outline-primary btn-sm" to={`/events/${id}`}>
             Back to Details
@@ -64,6 +74,17 @@ export default function Attendees() {
       ) : (
         <div className="card">
           <div className="card-body">
+
+            {/* Tally */}
+            <div className="mb-3">
+              <div className="fw-semibold">Signup Tally</div>
+              <div className="text-muted">
+                Signed up: <span className="fw-semibold">{signupCount}</span>
+                {' '} / {' '}
+                Capacity: <span className="fw-semibold">{capacity ?? 'N/A'}</span>
+              </div>
+            </div>
+
             {signups.length === 0 ? (
               <div className="text-muted">No attendees found.</div>
             ) : (

@@ -56,7 +56,11 @@ export async function getEvent(req, res) {
 
   try {
     const [rows] = await pool.query(
-      `SELECT * FROM events WHERE id = ? AND status = 'approved'`,
+      `SELECT 
+        e.*,
+        (SELECT COUNT(*) FROM event_signups es WHERE es.event_id = e.id) AS signup_count
+      FROM events e
+      WHERE e.id = ? AND e.status = 'approved'`,
       [eventId]
     );
 
