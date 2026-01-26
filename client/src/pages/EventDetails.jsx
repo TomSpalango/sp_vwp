@@ -44,11 +44,10 @@ export default function EventDetails() {
     setMsg('');
 
     try {
-      // Guest sees approved only
+      // Guest sees approved only (server enforces status filter)
       const data = await api.getEvent(id);
       setEvent(data);
     } catch (e) {
-      // TODO: Direct link to event if pending may 404, clean up in future milestone
       setErr(e.message);
       setEvent(null);
     } finally {
@@ -57,7 +56,7 @@ export default function EventDetails() {
   }
 
   useEffect(() => {
-    loadEvent();    
+    loadEvent();
   }, [id]);
 
   const onSignup = async () => {
@@ -66,6 +65,19 @@ export default function EventDetails() {
     try {
       await api.signupForEvent(id);
       setMsg('Signed up successfully.');
+      await loadEvent();
+    } catch (e) {
+      setErr(e.message);
+    }
+  };
+
+  const onWithdraw = async () => {
+    setErr('');
+    setMsg('');
+    try {
+      await api.withdrawFromEvent(id);
+      setMsg('Withdrawn successfully.');
+      await loadEvent();
     } catch (e) {
       setErr(e.message);
     }
@@ -104,7 +116,6 @@ export default function EventDetails() {
     try {
       await api.deleteEvent(id);
       setMsg('Event deleted.');
-      // return to events list after deletion
       navigate('/events');
     } catch (e) {
       setErr(e.message);
@@ -162,7 +173,7 @@ export default function EventDetails() {
                 </div>
               </div>
 
-              {/* Action  buttons */}
+              {/* Action buttons */}
               <div className="d-flex flex-wrap gap-2 justify-content-end">
                 {canSignup && (
                   <button className="btn btn-success btn-sm" onClick={onSignup}>
@@ -170,9 +181,8 @@ export default function EventDetails() {
                   </button>
                 )}
 
-                {/* Withdraw to be implemented in future milestone */}
                 {user && (
-                  <button className="btn btn-outline-secondary btn-sm" disabled title="Withdraw not implemented yet">
+                  <button className="btn btn-outline-secondary btn-sm" onClick={onWithdraw}>
                     Withdraw
                   </button>
                 )}

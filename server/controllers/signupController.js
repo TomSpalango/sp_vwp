@@ -84,3 +84,38 @@ export async function getEventSignups(req, res) {
     return res.status(500).json({ error: 'Server error' });
   }
 }
+
+// DELETE /api/events/:id/signup
+export async function withdrawFromEvent(req, res) {
+  const eventId = Number(req.params.id);
+  const userId = req.user.id;
+
+  if (!Number.isInteger(eventId)) {
+    return res.status(400).json({ error: 'Invalid event id' });
+  }
+
+  try {
+    // Does event exist?
+    const [events] = await pool.query(`SELECT id FROM events WHERE id = ?`, [eventId]);
+    if (events.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Delete the signup row for this user + event
+    const [result] = await pool.query(
+      `DELETE FROM event_signups WHERE event_id = ? AND user_id = ?`,
+      [eventId, userId]
+    );
+
+    // If nothing deleted, user wasn't signed up
+    if (result.affectedRows === 0) {
+      return res.status(409).json({ error: 'You are not signed up for this event' });
+    }
+
+    return res.json({ message: 'Withdrawn successfully' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+}
+

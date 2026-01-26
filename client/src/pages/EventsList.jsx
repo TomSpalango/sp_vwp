@@ -63,7 +63,18 @@ export default function EventsList() {
     try {
       await api.signupForEvent(eventId);
       setMsg('Signed up successfully.');
-      // refresh list after action
+      await loadEvents();
+    } catch (e) {
+      setErr(e.message);
+    }
+  };
+
+  const onWithdraw = async (eventId) => {
+    setErr('');
+    setMsg('');
+    try {
+      await api.withdrawFromEvent(eventId);
+      setMsg('Withdrawn successfully.');
       await loadEvents();
     } catch (e) {
       setErr(e.message);
@@ -173,9 +184,12 @@ export default function EventsList() {
                           </button>
                         )}
 
-                        {/* Withdraw will be implemented next milestone. */}
                         {user && (
-                          <button className="btn btn-outline-secondary" disabled title="Withdraw not implemented yet">
+                          <button
+                            className="btn btn-outline-secondary"
+                            onClick={() => onWithdraw(ev.id)}
+                            title="Withdraw from event"
+                          >
                             Withdraw
                           </button>
                         )}
