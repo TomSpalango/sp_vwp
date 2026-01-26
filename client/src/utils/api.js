@@ -39,6 +39,7 @@ export const api = {
 
   // Actions
   signupForEvent: (id) => request(`/api/events/${id}/signup`, { method: 'POST', auth: true }),
+  withdrawFromEvent: (id) => request(`/api/events/${id}/withdraw`, { method: 'DELETE', auth: true }),
   createEvent: (payload) => request('/api/events', { method: 'POST', body: payload, auth: true }),
   updateEvent: (id, payload) => request(`/api/events/${id}`, { method: 'PUT', body: payload, auth: true }),
 
