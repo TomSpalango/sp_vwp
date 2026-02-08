@@ -1,19 +1,23 @@
 import { pool } from '../db/mysql.js';
 
-// Mark attendance for a user at an event
+// Marks attendance for a specific user at a specific event.
+// This function is called when an admin or event coordinator submits attendance data.
+// Assumes req.user is populated by authentication middleware and contains role and id.
 export async function markAttendance(req, res) {
   const { eventId, userId, present, hours } = req.body;
 
+  // Validate required identifiers before processing
   if (!eventId || !userId) {
     return res.status(400).json({ error: 'eventId and userId are required' });
   }
 
   try {
-    // only admins or coordinators can mark attendance
+    // Enforce authorization: only Admins or Event Coordinators may mark attendance
     if (req.user.role !== 'Admin' && req.user.role !== 'Event Coordinator') {
       return res.status(403).json({ error: 'Not authorized to mark attendance' });
     }
 
+    // Insert a new attendance record or update an existing one for the same event/user
     await pool.query(
       `INSERT INTO attendance (event_id, user_id, present, hours, marked_by, marked_at)
        VALUES (?, ?, ?, ?, ?, NOW())
@@ -22,21 +26,31 @@ export async function markAttendance(req, res) {
          hours = VALUES(hours),
          marked_by = VALUES(marked_by),
          marked_at = VALUES(marked_at)`,
-      [eventId, userId, present ? 1 : 0, hours || 0, req.user.id]
+      [
+        eventId,
+        userId,
+        present ? 1 : 0,
+        hours || 0,      // Default to 0 hours if not provided
+        req.user.id
+      ]
     );
 
     res.json({ message: 'Attendance marked' });
   } catch (err) {
+    // Log server-side errors for debugging while returning a generic Server error response
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 }
 
-// Get attendance for an event
+// Retrieves all attendance records for a specific event.
+// This function is called when viewing attendance details for an event.
+// Assumes the eventId is provided as a route parameter.
 export async function getAttendance(req, res) {
   const { eventId } = req.params;
 
   try {
+    // Query attendance records joined with user details for display purposes
     const [rows] = await pool.query(
       `SELECT a.id, u.name, u.email, a.present, a.hours, a.marked_at, a.marked_by
        FROM attendance a
@@ -47,6 +61,7 @@ export async function getAttendance(req, res) {
 
     res.json(rows);
   } catch (err) {
+    // Handle and log unexpected database or server errors
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }

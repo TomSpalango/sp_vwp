@@ -15,26 +15,57 @@ import { signupForEvent, withdrawFromEvent, getEventSignups } from '../controlle
 
 const router = Router();
 
-router.get('/', getEvents);          // Guests can browse (approved only)
-router.get('/all', authRequired, requireRole('Admin'), getAllEvents); // Admin only can see all
-router.get('/:id', getEvent);        // Guests can view (approved only)
+// Retrieves all approved events for public browsing.
+router.get('/', getEvents);
 
-// Registered users can create events (pending approval)
-router.post('/', authRequired, requireRole('Registered User', 'Event Coordinator', 'Admin'), createEvent);
+// Retrieves all events regardless of status.
+router.get('/all', authRequired, requireRole('Admin'), getAllEvents);
 
-// Only creator or Admin can update/delete / approve/decline
-// Just require login for now
+// Retrieves a single approved event by id.
+router.get('/:id', getEvent);
+
+// Creates a new event submission.
+router.post(
+  '/',
+  authRequired,
+  requireRole('Registered User', 'Event Coordinator', 'Admin'),
+  createEvent
+);
+
+// Updates an existing event.
 router.put('/:id', authRequired, updateEvent);
+
+// Approves a pending event.
 router.put('/:id/approve', authRequired, requireRole('Admin'), approveEvent);
+
+// Declines a pending event.
 router.put('/:id/decline', authRequired, requireRole('Admin'), declineEvent);
+
+// Deletes an event.
 router.delete('/:id', authRequired, deleteEvent);
 
-// Sign up for an event - must be logged in and at least Registered User
-router.post('/:id/signup', authRequired, requireRole('Registered User', 'Event Coordinator', 'Admin'), signupForEvent);
+// Signs the current user up for an event.
+router.post(
+  '/:id/signup',
+  authRequired,
+  requireRole('Registered User', 'Event Coordinator', 'Admin'),
+  signupForEvent
+);
 
-// View signups (coordinator and admin only)
-router.get('/:id/signups', authRequired, requireRole('Event Coordinator', 'Admin'), getEventSignups);
+// Retrieves the signup roster for an event.
+router.get(
+  '/:id/signups',
+  authRequired,
+  requireRole('Event Coordinator', 'Admin'),
+  getEventSignups
+);
 
-router.delete('/:id/withdraw', authRequired, requireRole('Registered User', 'Event Coordinator', 'Admin'), withdrawFromEvent);
+// Withdraws the current user from an event.
+router.delete(
+  '/:id/withdraw',
+  authRequired,
+  requireRole('Registered User', 'Event Coordinator', 'Admin'),
+  withdrawFromEvent
+);
 
 export default router;

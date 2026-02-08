@@ -1,6 +1,8 @@
 import { pool } from '../db/mysql.js'; // using absolute path for now
 
-// Create a new event
+// Creates a new event record owned by the currently authenticated user.
+// This function is called when a logged-in user submits the create event form.
+// Assumes req.user is populated by authentication middleware and contains the user id.
 export async function createEvent(req, res) {
   const { title, description, location, start_datetime, end_datetime, capacity } = req.body;
   if (!title || !start_datetime) {
@@ -20,7 +22,9 @@ export async function createEvent(req, res) {
   }
 }
 
-// Get all approved events
+// Retrieves only events that have been approved for public display.
+// This function is called when guests/registered users load the public event list.
+// Assumes events use a status field where 'approved' indicates visibility.
 export async function getEvents(req, res) {
   try {
     const [rows] = await pool.query(
@@ -33,7 +37,7 @@ export async function getEvents(req, res) {
   }
 }
 
-// Get all events
+// Retrieves all events regardless of approval status.
 export async function getAllEvents(req, res) {
   try {
     const [rows] = await pool.query(
@@ -46,10 +50,13 @@ export async function getAllEvents(req, res) {
   }
 }
 
-// Get a single event, approved only
+// Retrieves a single approved event by id, including a computed signup count.
+// This function is called when viewing the event detail page for public/approved events.
+// Assumes the route parameter is numeric and only approved events should be returned here.
 export async function getEvent(req, res) {
   const eventId = Number(req.params.id);
 
+  // Validate that the route parameter is a valid integer id
   if (!Number.isInteger(eventId)) {
     return res.status(400).json({ error: 'Invalid event id' });
   }
@@ -75,8 +82,9 @@ export async function getEvent(req, res) {
   }
 }
 
-
-// Update an event
+// Updates an existing event record.
+// This function is called when an event owner or an admin submits edits to an event.
+// Admins may update any event and may change status. Non-admins may only update events they created.
 export async function updateEvent(req, res) {
   const { id } = req.params;
   try {
@@ -84,6 +92,8 @@ export async function updateEvent(req, res) {
     if (events.length === 0) return res.status(404).json({ error: 'Event not found' });
 
     const event = events[0];
+
+    // Authorization check: admins can edit any event, others can only edit their own
     if (req.user.role !== 'Admin' && event.created_by !== req.user.id) {
       return res.status(403).json({ error: 'Not authorized to update this event' });
     }
@@ -116,8 +126,8 @@ export async function updateEvent(req, res) {
   }
 }
 
-
-// Approve an event
+// Approves a pending event by setting its status to 'approved'.
+// This function is called when an admin approves a user-submitted event.
 export async function approveEvent(req, res) {
   const eventId = Number(req.params.id);
   if (!Number.isInteger(eventId)) return res.status(400).json({ error: 'Invalid event id' });
@@ -139,7 +149,9 @@ export async function approveEvent(req, res) {
 }
 
 
-// Decline an event
+// Declines a pending event by setting its status to 'declined'.
+// This function is called when an admin rejects a user-submitted event.
+// Assumes admin authorization is enforced at the routing/middleware layer.
 export async function declineEvent(req, res) {
   const eventId = Number(req.params.id);
   if (!Number.isInteger(eventId)) return res.status(400).json({ error: 'Invalid event id' });
@@ -160,9 +172,9 @@ export async function declineEvent(req, res) {
   }
 }
 
-
-
-// Delete an event
+// Deletes an event record.
+// This function is called when an event owner or an admin requests deletion of an event.
+// Admins may delete any event, non-admins may only delete events they created.
 export async function deleteEvent(req, res) {
   const { id } = req.params;
   try {
@@ -170,6 +182,8 @@ export async function deleteEvent(req, res) {
     if (events.length === 0) return res.status(404).json({ error: 'Event not found' });
 
     const event = events[0];
+
+    // Authorization check: admins can delete any event, others can only delete their own
     if (req.user.role !== 'Admin' && event.created_by !== req.user.id) {
       return res.status(403).json({ error: 'Not authorized to delete this event' });
     }

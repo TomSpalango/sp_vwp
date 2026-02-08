@@ -5,10 +5,10 @@ import { markAttendance, getAttendance } from '../controllers/attendanceControll
 
 const router = Router();
 
-// Anyone logged in can view attendance
+// Retrieves attendance records for a specific event.
 router.get('/:eventId', authRequired, getAttendance);
 
-// Only Event Coordinators / Admins can mark
+// Marks or updates attendance for a user at an event.
 router.post('/', authRequired, requireRole('Event Coordinator', 'Admin'), markAttendance);
 
 export default router;
